@@ -18,5 +18,70 @@
     "acronym": "MCDU",
     "definition": "Multifunction Control Display Units",
     "module": "MOD5"
+  },
+  {
+    "acronym": "ISA",
+    "definition": "Instruction Set Architecture",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "ALU",
+    "definition": "Arithmetic Logic Unit",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "SSD",
+    "definition": "NAND Solid State Drive",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "HDD",
+    "definition": "Magnetic Hard Drive Disk",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "DRAM",
+    "definition": "Dynamic Random Access Memory",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "ROM",
+    "definition": "Read Only Memory",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "I/O",
+    "definition": "Input/Output",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "IC",
+    "definition": "Integrated Circuit",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "PROM",
+    "definition": "Programmable Read-Only Memory",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "EPROM",
+    "definition": "Erasable Programmable Read-Only Memory",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "FMC",
+    "definition": "Flight Management Computer",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "FCC",
+    "definition": "Flight Control Computer",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "BCD",
+    "definition": "Binary Coded Decimal",
+    "module": "MOD5"
   }
 ]
