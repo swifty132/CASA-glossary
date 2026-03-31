@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CASA Avionics Glossary (Pro Export)</title>
+    <style>
+        :root { 
+            --bg: #f4f7f9; --card-bg: #ffffff; --text-main: #333; --text-muted: #666;
+            --primary: #007bff; --border: #ddd; --tab-bg: #e9ecef;
+            --modal-overlay: rgba(0,0,0,0.5);
+        }
+
+        body.dark-mode {
+            --bg: #1a202c; --card-bg: #2d3748; --text-main: #f7fafc; --text-muted: #a0aec0;
+            --primary: #63b3ed; --border: #4a5568; --tab-bg: #4a5568;
+        }
+
+        body { font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--text-main); padding: 20px; display: flex; flex-direction: column; align-items: center; transition: 0.3s; }
+        .container { width: 100%; max-width: 900px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+
+        .card { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        .input-group { display: grid; grid-template-columns: 1fr 2fr 1fr auto; gap: 12px; }
+        
+        input { padding: 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--card-bg); color: var(--text-main); }
+        button { padding: 12px 20px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        
+        .btn-add { background: var(--primary); color: white; }
+        .btn-secondary { background: #718096; color: white; margin-right: 8px; }
+        .btn-theme { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+
+        /* Modal Styles */
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--modal-overlay); display: none; align-items: center; justify-content: center; z-index: 1000; 
+        }
+        .modal { 
+            background: var(--card-bg); width: 90%; max-width: 600px; padding: 30px; border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;
+        }
+        pre { 
+            background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 6px; 
+            max-height: 300px; overflow-y: auto; font-size: 13px; margin: 15px 0;
+        }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .close-modal { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 20px; color: var(--text-muted); }
+
+        /* List Items */
+        .tab-container { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
+        .tab { padding: 8px 18px; background: var(--tab-bg); border-radius: 20px; font-size: 13px; cursor: pointer; color: var(--text-muted); }
+        .tab.active { background: var(--primary); color: white; }
+        .glossary-item { background: var(--card-bg); padding: 18px; border-radius: 8px; margin-bottom: 12px; border-left: 5px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
+        .module-badge { background: #cbd5e0; color: #2d3748; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 4px; margin-right: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>CASA Avionics Glossary</h2>
+        <button class="btn-theme" onclick="toggleTheme()">🌓 Theme</button>
+    </div>
+
+    <div class="card">
+        <div class="input-group">
+            <input type="text" id="acroIn" placeholder="Acronym" oninput="handleSearch()">
+            <input type="text" id="defIn" placeholder="Definition">
+            <input type="text" id="modIn" placeholder="Mod (e.g. M5)" style="width: 100px;">
+            <button class="btn-add" onclick="addItem()">Add</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <button class="btn-secondary" id="toggleBtn" onclick="toggleSource()">Switch to Global</button>
+                <button class="btn-secondary" onclick="openExportModal()">Export Data</button>
+            </div>
+            <div id="itemCount" style="font-weight: bold; color: var(--primary); font-size: 14px;">Loading...</div>
+        </div>
+        <div class="tab-container" id="moduleTabs"></div>
+    </div>
+
+    <div id="displayList"></div>
+</div>
+
+<div class="modal-overlay" id="exportModal">
+    <div class="modal">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h3>Export Personal Database</h3>
+        <p style="font-size: 14px; color: var(--text-muted);">Copy this JSON to update your global <code>glossary.json</code> file.</p>
+        <pre id="jsonPreview"></pre>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="copyToClipboard()" id="copyBtn">Copy to Clipboard</button>
+            <button class="btn-add" onclick="downloadJSON()">Download .json</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let globalData = [];
+    let personalData = JSON.parse(localStorage.getItem('casa_glossary')) || [];
+    let showingGlobal = false;
+    let activeModule = "ALL";
+    let searchQuery = "";
+
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+    }
+
+    // Modal Logic
+    function openExportModal() {
+        const modal = document.getElementById('exportModal');
+        const preview = document.getElementById('jsonPreview');
+        preview.textContent = JSON.stringify(personalData, null, 2);
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('exportModal').style.display = 'none';
+        document.getElementById('copyBtn').innerText = "Copy to Clipboard";
+    }
+
+    async function copyToClipboard() {
+        const text = JSON.stringify(personalData, null, 2);
+        await navigator.clipboard.writeText(text);
+        document.getElementById('copyBtn').innerText = "✅ Copied!";
+    }
+
+    function downloadJSON() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(personalData, null, 2));
+        const dl = document.createElement('a');
+        dl.setAttribute("href", dataStr);
+        dl.setAttribute("download", "glossary.json");
+        dl.click();
+    }
+
+    // Original Logic (Search, Add, Render)
+    async function init() {
+        try {
+            const res = await fetch('glossary.json');
+            if (res.ok) globalData = await res.json();
+        } catch (e) { console.log("Global JSON not found."); }
+        render();
+    }
+
+    function handleSearch() {
+        searchQuery = document.getElementById('acroIn').value.toUpperCase().trim();
+        const source = showingGlobal ? globalData : personalData;
+        const found = source.find(i => i.acronym === searchQuery);
+        if (found) {
+            document.getElementById('defIn').value = found.definition;
+            document.getElementById('modIn').value = found.module;
+        } else { document.getElementById('defIn').value = ""; }
+        render();
+    }
+
+    function addItem() {
+        const acro = document.getElementById('acroIn').value.toUpperCase().trim();
+        const def = document.getElementById('defIn').value.trim();
+        const mod = document.getElementById('modIn').value.toUpperCase().trim() || "GENERAL";
+        if (acro && def) {
+            personalData.push({ acronym: acro, definition: def, module: mod });
+            localStorage.setItem('casa_glossary', JSON.stringify(personalData));
+            document.getElementById('acroIn').value = "";
+            document.getElementById('defIn').value = "";
+            searchQuery = "";
+            render();
+        }
+    }
+
+    function toggleSource() {
+        showingGlobal = !showingGlobal;
+        activeModule = "ALL";
+        document.getElementById('toggleBtn').innerText = showingGlobal ? "Switch to Personal" : "Switch to Global";
+        render();
+    }
+
+    function render() {
+        const source = showingGlobal ? globalData : personalData;
+        const availableModules = ["ALL", ...new Set(source.map(item => item.module.toUpperCase()))].sort();
+        const tabDiv = document.getElementById('moduleTabs');
+        tabDiv.innerHTML = availableModules.map(m => `<div class="tab ${activeModule === m ? 'active' : ''}" onclick="activeModule='${m}'; render();">${m}</div>`).join('');
+        const filtered = source.filter(i => (activeModule === "ALL" || i.module.toUpperCase() === activeModule) && i.acronym.includes(searchQuery)).sort((a, b) => a.acronym.localeCompare(b.acronym));
+        document.getElementById('itemCount').innerText = `${showingGlobal ? 'Global' : 'Personal'}: ${filtered.length} Items`;
+        const listDiv = document.getElementById('displayList');
+        listDiv.innerHTML = filtered.map((item, idx) => `
+            <div class="glossary-item">
+                <div><span class="module-badge">${item.module}</span><strong>${item.acronym}</strong>: ${item.definition}</div>
+                ${!showingGlobal ? `<button style="background:#e53e3e; color:white; padding:5px 10px; font-size:12px; border-radius:4px;" onclick="deleteItem(${idx})">Delete</button>` : ''}
+            </div>`).join('');
+    }
+
+    function deleteItem(idx) {
+        personalData.splice(idx, 1);
+        localStorage.setItem('casa_glossary', JSON.stringify(personalData));
+        render();
+    }
+
+    init();
+</script>
+</body>
+</html>

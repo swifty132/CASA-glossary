@@ -1,0 +1,22 @@
+[
+  {
+    "acronym": "CPU",
+    "definition": "Central Processing Unit",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "RAM",
+    "definition": "Random Access Memory",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "ENIAC",
+    "definition": "Electronic Numerical Integrator and Computer",
+    "module": "MOD5"
+  },
+  {
+    "acronym": "MCDU",
+    "definition": "Multifunction Control Display Units",
+    "module": "MOD5"
+  }
+]
